@@ -8,6 +8,7 @@ function App() {
   const [account, setAccount] = useState(null);
   const [daoContract, setDaoContract] = useState(null);
   const [error, setError] = useState('');
+  const [isConnecting, setIsConnecting] = useState(false); // Added to manage wallet connection state
 
   useEffect(() => {
     const init = async () => {
@@ -44,13 +45,24 @@ function App() {
   };
 
   const connectWallet = async () => {
+    if (isConnecting) return; // Prevent multiple wallet connection attempts
+    setIsConnecting(true);
+
+    if (!window.ethereum) {
+      setError('Ethereum wallet is not detected. Please install MetaMask or another wallet extension.');
+      setIsConnecting(false);
+      return;
+    }
+
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       setAccount(accounts[0]);
       await fetchProposals();
     } catch (error) {
       console.error('Error connecting wallet:', error);
-      setError('Failed to connect wallet. Make sure it\'s installed and unlocked.');
+      setError(`Wallet connection failed: ${error.message}`);
+    } finally {
+      setIsConnecting(false); // Reset connection state
     }
   };
 
