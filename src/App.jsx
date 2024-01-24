@@ -1,4 +1,10 @@
+import { Buffer } from 'buffer';
+window.global = window;
+window.Buffer = Buffer;
+
 import React, { useState, useEffect } from 'react';
+import Web3 from 'web3';
+import WalletConnectProvider from '@walletconnect/web3-provider';
 import getDAOContract from './DAOContract';
 import './App.css';
 
@@ -45,24 +51,32 @@ function App() {
   };
 
   const connectWallet = async () => {
-    if (isConnecting) return; // Prevent multiple wallet connection attempts
+    if (isConnecting) return;
     setIsConnecting(true);
 
-    if (!window.ethereum) {
-      setError('Ethereum wallet is not detected. Please install MetaMask or another wallet extension.');
-      setIsConnecting(false);
-      return;
-    }
-
     try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      let web3;
+      if (window.ethereum) {
+        web3 = new Web3(window.ethereum);
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+      } else {
+        const walletConnectProvider = new WalletConnectProvider({
+          infuraId: "YOUR_INFURA_ID" // Replace with your actual Infura ID
+        });
+        await walletConnectProvider.enable();
+        web3 = new Web3(walletConnectProvider);
+      }
+
+      const accounts = await web3.eth.getAccounts();
       setAccount(accounts[0]);
+      const contract = await getDAOContract(web3);
+      setDaoContract(contract);
       await fetchProposals();
     } catch (error) {
       console.error('Error connecting wallet:', error);
       setError(`Wallet connection failed: ${error.message}`);
     } finally {
-      setIsConnecting(false); // Reset connection state
+      setIsConnecting(false);
     }
   };
 
