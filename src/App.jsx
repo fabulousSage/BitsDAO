@@ -8,7 +8,7 @@ function App() {
   const [account, setAccount] = useState(null);
   const [daoContract, setDaoContract] = useState(null);
   const [error, setError] = useState('');
-  const [isConnecting, setIsConnecting] = useState(false); // Added to manage wallet connection state
+  const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
     const init = async () => {
